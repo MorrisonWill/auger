@@ -121,7 +121,8 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	// check if client is still alive
 	go func() {
 		for {
-			_, err := session.Ping()
+			test, err := session.Ping()
+			fmt.Println(test)
 			if err != nil {
 				log.Println("Client disconnected", err)
 				endUserListener.Close()
