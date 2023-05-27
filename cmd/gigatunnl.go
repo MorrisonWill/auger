@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"log"
 
-	"gigatunnl/client"
-	"gigatunnl/server"
+	"github.com/morrisonwill/gigatunnl/client"
+	"github.com/morrisonwill/gigatunnl/server"
 )
+
+// TODO: heartbeats
+// TODO: better protocol for different types of messages
 
 func main() {
 	// Parse command-line arguments
@@ -40,6 +43,7 @@ func runServer() {
 	server.Start()
 
 	fmt.Println("Server is running. Press Ctrl+C to exit.")
+
 	// Block indefinitely to keep the server running
 	select {}
 }

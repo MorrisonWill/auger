@@ -2,10 +2,11 @@ package server
 
 import (
 	"fmt"
-	"gigatunnl/pkg"
 	"log"
 	"net"
 	"sync"
+
+	"github.com/morrisonwill/gigatunnl/pkg"
 )
 
 type Server struct {

@@ -3,9 +3,10 @@ package client
 import (
 	"bufio"
 	"fmt"
-	"gigatunnl/pkg"
 	"net"
 	"strconv"
+
+	"github.com/morrisonwill/gigatunnl/pkg"
 )
 
 type Client struct {
