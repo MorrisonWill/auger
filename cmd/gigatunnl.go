@@ -9,6 +9,33 @@ import (
 	"github.com/morrisonwill/gigatunnl/server"
 )
 
+// TODO: yamux
+/*
+
+client:
+connection = dial("bore.pub")
+server = Yamux(connection)
+for {
+  newConnection = server.Accept()
+  go func () {
+    local = dial("localhost")
+    proxy(local, newConnection)
+  }()
+}
+
+server:
+control = listener("bore.pub")
+for {
+  client = Yamux(control.Accept())
+  go func () {
+    server = listener("bore.pub:0")
+    for {
+      proxy(server.Accept(), client.Open())
+    }
+  }()
+}
+
+*/
 // TODO: heartbeats
 // TODO: better protocol for different types of messages
 
