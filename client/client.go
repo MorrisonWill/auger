@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/yamux"
-	"github.com/morrisonwill/gigatunnl/pkg"
+	"github.com/morrisonwill/tunnel/pkg"
 )
 
 type Client struct {

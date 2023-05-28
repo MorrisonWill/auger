@@ -1,4 +1,4 @@
-module github.com/morrisonwill/gigatunnl
+module github.com/morrisonwill/tunnel
 
 go 1.20
 

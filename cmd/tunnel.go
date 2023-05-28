@@ -9,6 +9,8 @@ import (
 	"github.com/morrisonwill/tunnel/server"
 )
 
+// TODO: intercept Ctrl+C and close everything gracefully
+
 func main() {
 	// Parse command-line arguments
 	mode := flag.String("mode", "", "The mode to run: 'server' or 'client'")
