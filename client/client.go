@@ -13,8 +13,8 @@ import (
 type Client struct {
 	serverAddress string
 	localAddress  string
+	EndUserPort   int
 	session       *yamux.Session
-	endUserPort   int
 }
 
 func NewClient(serverAddr string, localAddr string) *Client {
@@ -47,7 +47,7 @@ func (c *Client) Connect() error {
 	if err != nil {
 		return fmt.Errorf("invalid end user port: %w", err)
 	}
-	c.endUserPort = endUserPort
+	c.EndUserPort = endUserPort
 	fmt.Printf("End user port on server: %d\n", endUserPort)
 
 	return nil

@@ -17,11 +17,12 @@ import (
 // currently one problem with this is detecting when client disconnects and freeing ports
 
 var (
-	serverPort          int
 	serverAddress       string
 	minPort, maxPort    int
 	commaSeparatedPorts string
 )
+
+const serverPort = 49152
 
 var rootCmd = &cobra.Command{
 	Use:   "tunnel",
@@ -55,14 +56,12 @@ var serverCmd = &cobra.Command{
 }
 
 func init() {
-	serverCmd.Flags().IntVar(&serverPort, "port", getEnvAsInt("TUNNEL_PORT", 49152), "control port on the server")
 	serverCmd.Flags().IntVar(&minPort, "min-port", getEnvAsInt("TUNNEL_MIN_PORT", 0), "Minimum port range")
 	serverCmd.Flags().IntVar(&maxPort, "max-port", getEnvAsInt("TUNNEL_MAX_PORT", 0), "Maximum port range")
 	serverCmd.Flags().StringVar(&commaSeparatedPorts, "ports", getEnvAsString("TUNNEL_PORTS", ""), "Comma-separated ports")
 
 	localCmd.Flags().StringVarP(&serverAddress, "remote-address", "r", getEnvAsString("TUNNEL_REMOTE_ADDRESS", ""), "address of the server to connect to")
 	localCmd.MarkFlagRequired("remote-address")
-	localCmd.Flags().IntVarP(&serverPort, "remote-port", "p", getEnvAsInt("TUNNEL_REMOTE_PORT", 49152), "server's control port")
 
 	rootCmd.AddCommand(localCmd)
 	rootCmd.AddCommand(serverCmd)
