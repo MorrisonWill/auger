@@ -12,9 +12,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO: fix port selection, currently it'll empty then choose available
+// TODO: add graceful shutdown on both sides
+// currently one problem with this is detecting when client disconnects and freeing ports
+
 var (
 	serverPort          int
-	localAddress        string
 	serverAddress       string
 	minPort, maxPort    int
 	commaSeparatedPorts string
@@ -52,16 +55,40 @@ var serverCmd = &cobra.Command{
 }
 
 func init() {
-	localCmd.Flags().StringVarP(&serverAddress, "remote-address", "r", "localhost", "address of the server to connect to")
-	localCmd.Flags().IntVarP(&serverPort, "remote-port", "p", 49152, "server's control port")
+	serverCmd.Flags().IntVar(&serverPort, "port", getEnvAsInt("TUNNEL_PORT", 49152), "control port on the server")
+	serverCmd.Flags().IntVar(&minPort, "min-port", getEnvAsInt("TUNNEL_MIN_PORT", 0), "Minimum port range")
+	serverCmd.Flags().IntVar(&maxPort, "max-port", getEnvAsInt("TUNNEL_MAX_PORT", 0), "Maximum port range")
+	serverCmd.Flags().StringVar(&commaSeparatedPorts, "ports", getEnvAsString("TUNNEL_PORTS", ""), "Comma-separated ports")
 
-	serverCmd.Flags().IntVar(&serverPort, "port", 49152, "control port on the server")
-	serverCmd.Flags().IntVar(&minPort, "min-port", 0, "Minimum port range")
-	serverCmd.Flags().IntVar(&maxPort, "max-port", 0, "Maximum port range")
-	serverCmd.Flags().StringVar(&commaSeparatedPorts, "ports", "", "Comma-separated ports")
+	localCmd.Flags().StringVarP(&serverAddress, "remote-address", "r", getEnvAsString("TUNNEL_REMOTE_ADDRESS", ""), "address of the server to connect to")
+	localCmd.MarkFlagRequired("remote-address")
+	localCmd.Flags().IntVarP(&serverPort, "remote-port", "p", getEnvAsInt("TUNNEL_REMOTE_PORT", 49152), "server's control port")
 
 	rootCmd.AddCommand(localCmd)
 	rootCmd.AddCommand(serverCmd)
+}
+
+func getEnvAsString(name string, defaultValue string) string {
+	value, exists := os.LookupEnv(name)
+	if !exists {
+		return defaultValue
+	}
+	return value
+}
+
+func getEnvAsInt(name string, defaultValue int) int {
+	valueStr, exists := os.LookupEnv(name)
+	if !exists {
+		return defaultValue
+	}
+
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		log.Printf("Failed to convert %s to integer. Using default value: %v", name, defaultValue)
+		return defaultValue
+	}
+
+	return value
 }
 
 func main() {
@@ -79,8 +106,10 @@ func runServer(port int) {
 		log.Fatalf("Failed to create server: %v", err)
 	}
 
-	// Set Port Range
-	server.SetPortRange(minPort, maxPort)
+	// Set Port Range if defined
+	if minPort != 0 && maxPort != 0 {
+		server.SetPortRange(minPort, maxPort)
+	}
 
 	// Set Specific Ports
 	if commaSeparatedPorts != "" {

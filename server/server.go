@@ -36,6 +36,8 @@ func NewServer(address string) (*Server, error) {
 }
 
 func (s *Server) SetPortRange(start int, end int) {
+	fmt.Println("ports before", s.ports.list)
+
 	for port := start; port <= end; port++ {
 		s.ports.Lock()
 		s.ports.list = append(s.ports.list, port)
@@ -76,18 +78,22 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	var endUserListener net.Listener
 	var err error
 
+	var endUserPort int
+
 	s.ports.Lock()
 	if len(s.ports.list) == 0 {
 		endUserListener, err = net.Listen("tcp", ":0") // 0 lets the system pick an available port
+		endUserPort = endUserListener.Addr().(*net.TCPAddr).Port
 	} else {
 		randPortIdx := s.rand.Intn(len(s.ports.list))
-		randPort := s.ports.list[randPortIdx]
-		endUserListener, err = net.Listen("tcp", fmt.Sprintf(":%d", randPort))
+		endUserPort = s.ports.list[randPortIdx]
+		endUserListener, err = net.Listen("tcp", fmt.Sprintf(":%d", endUserPort))
 		if err == nil {
 			// remove port from list
 			s.ports.list = append(s.ports.list[:randPortIdx], s.ports.list[randPortIdx+1:]...)
 		}
 	}
+
 	s.ports.Unlock()
 
 	if err != nil {
@@ -109,6 +115,10 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		// Accept an end user connection
 		endUserConn, err := endUserListener.Accept()
 		if err != nil {
+			// If we failed to accept the end user connection, we assume that the client has disconnected
+			s.ports.Lock()
+			s.ports.list = append(s.ports.list, endUserPort)
+			s.ports.Unlock()
 			log.Printf("Failed to accept end user connection: %v\n", err)
 			continue
 		}
