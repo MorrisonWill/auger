@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"sync"
 
 	"github.com/hashicorp/yamux"
@@ -14,6 +15,7 @@ import (
 type Server struct {
 	listener  net.Listener
 	listeners sync.Map
+	ports     sync.Map
 }
 
 func NewServer(address string) (*Server, error) {
@@ -24,6 +26,17 @@ func NewServer(address string) (*Server, error) {
 	return &Server{
 		listener: listener,
 	}, nil
+}
+
+func (s *Server) SetPorts(ports []string) {
+	for _, port := range ports {
+		p, err := strconv.Atoi(port)
+		if err != nil {
+			log.Printf("Invalid port: %v\n", port)
+			continue
+		}
+		s.ports.Store(p, true)
+	}
 }
 
 func (s *Server) Start() {
@@ -43,12 +56,27 @@ func (s *Server) Start() {
 func (s *Server) handleClient(clientConn net.Conn) {
 	defer clientConn.Close()
 
-	// Listen for end users
-	endUserListener, err := net.Listen("tcp", ":0") // 0 lets the system pick an available port
+	var endUserListener net.Listener
+	var err error
+
+	s.ports.Range(func(key, value interface{}) bool {
+		port, _ := key.(int)
+		endUserListener, err = net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err == nil {
+			s.ports.Delete(key)
+			return false
+		}
+		return true
+	})
+
 	if err != nil {
-		log.Printf("Failed to listen for end users: %v\n", err)
-		return
+		endUserListener, err = net.Listen("tcp", ":0") // 0 lets the system pick an available port
+		if err != nil {
+			log.Printf("Failed to listen for end users: %v\n", err)
+			return
+		}
 	}
+
 	defer endUserListener.Close()
 
 	s.listeners.Store(endUserListener.Addr().(*net.TCPAddr).Port, endUserListener)
