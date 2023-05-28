@@ -61,7 +61,10 @@ func init() {
 	serverCmd.Flags().StringVar(&commaSeparatedPorts, "ports", getEnvAsString("TUNNEL_PORTS", ""), "Comma-separated ports")
 
 	localCmd.Flags().StringVarP(&serverAddress, "remote-address", "r", getEnvAsString("TUNNEL_REMOTE_ADDRESS", ""), "address of the server to connect to")
-	localCmd.MarkFlagRequired("remote-address")
+	err := localCmd.MarkFlagRequired("remote-address")
+	if err != nil {
+		log.Fatalf("Failed to mark remote-address as required: %v", err)
+	}
 
 	rootCmd.AddCommand(localCmd)
 	rootCmd.AddCommand(serverCmd)

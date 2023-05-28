@@ -2,7 +2,7 @@ package tests
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"testing"
@@ -29,7 +29,7 @@ func TestEndToEnd(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	if string(body) != "Hello, world!" {
 		t.Fatalf("Unexpected response: %s", body)
 	}
@@ -39,7 +39,11 @@ func startLocalServer() *http.Server {
 	localServer := &http.Server{Addr: ":8080", Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, world!")
 	})}
-	go localServer.ListenAndServe()
+	go func() {
+		if err := localServer.ListenAndServe(); err != nil {
+			log.Fatalf("Failed to start local server: %v", err)
+		}
+	}()
 	return localServer
 }
 
@@ -61,7 +65,11 @@ func startTunnelClient(tunnelServer *server.Server) *client.Client {
 		log.Fatalf("Failed to connect to server: %v", err)
 	}
 
-	go tunnelClient.Start()
+	go func() {
+		if err := tunnelClient.Start(); err != nil {
+			log.Fatalf("Failed to start tunnel client: %v", err)
+		}
+	}()
 	time.Sleep(1 * time.Second)
 	return tunnelClient
 }
