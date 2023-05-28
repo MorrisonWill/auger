@@ -12,9 +12,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO: fix port selection, currently it'll empty then choose available
 // TODO: add graceful shutdown on both sides
-// currently one problem with this is detecting when client disconnects and freeing ports
+// TODO: add good error handling on both sides
+// TODO: test is not running, hanging somewhere
 
 var (
 	serverAddress       string
