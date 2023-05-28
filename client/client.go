@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/hashicorp/yamux"
 	"github.com/morrisonwill/tunnel/pkg"
@@ -54,6 +57,16 @@ func (c *Client) Connect() error {
 }
 
 func (c *Client) Start() error {
+	// Intercept sigint (ctrl-c)
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-interrupt
+		c.session.Close()
+		os.Exit(0)
+	}()
+
 	// Accept new yamux streams and forward them to the local port
 	for {
 		newStream, err := c.session.Accept()
@@ -67,6 +80,7 @@ func (c *Client) Start() error {
 				return
 			}
 			pkg.Proxy(newStream, newLocalConnection)
+			c.session.Close()
 		}()
 	}
 }

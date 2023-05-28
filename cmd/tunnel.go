@@ -36,7 +36,7 @@ Complete documentation is available at https://github.com/morrisonwill/tunnel`,
 
 var localCmd = &cobra.Command{
 	Use:   "local [localPort]",
-	Short: "Starts a local proxy to the remote server",
+	Short: "Proxies local port through remote server",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		localPort, err := strconv.Atoi(args[0])

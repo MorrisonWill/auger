@@ -17,10 +17,12 @@ import (
 type Server struct {
 	listener net.Listener
 	rand     *rand.Rand
-	ports    struct {
-		sync.Mutex
-		list []int
-	}
+	ports    ports
+}
+
+type ports struct {
+	sync.Mutex
+	list []int
 }
 
 func NewServer(address string) (*Server, error) {
@@ -32,6 +34,9 @@ func NewServer(address string) (*Server, error) {
 	return &Server{
 		listener: listener,
 		rand:     rand.New(rand.NewSource(time.Now().UnixNano())),
+		ports: ports{
+			list: nil,
+		},
 	}, nil
 }
 
@@ -73,6 +78,8 @@ func (s *Server) Start() {
 }
 
 func (s *Server) handleClient(clientConn net.Conn) {
+	doneChan := make(chan bool)
+
 	defer clientConn.Close()
 
 	var endUserListener net.Listener
@@ -81,7 +88,7 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	var endUserPort int
 
 	s.ports.Lock()
-	if len(s.ports.list) == 0 {
+	if s.ports.list == nil {
 		endUserListener, err = net.Listen("tcp", ":0") // 0 lets the system pick an available port
 		endUserPort = endUserListener.Addr().(*net.TCPAddr).Port
 	} else {
@@ -111,14 +118,32 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		return
 	}
 
+	// check if client is still alive
+	go func() {
+		for {
+			_, err := session.Ping()
+			if err != nil {
+				log.Printf("Client disconnected")
+				endUserListener.Close()
+				s.ports.Lock()
+				s.ports.list = append(s.ports.list, endUserPort)
+				s.ports.Unlock()
+				doneChan <- true
+				return
+			}
+			time.Sleep(time.Second * 10)
+		}
+	}()
+
 	for {
+		if <-doneChan {
+			log.Printf("CLI disconnected, killing proxy")
+			return
+		}
+
 		// Accept an end user connection
 		endUserConn, err := endUserListener.Accept()
 		if err != nil {
-			// If we failed to accept the end user connection, we assume that the client has disconnected
-			s.ports.Lock()
-			s.ports.list = append(s.ports.list, endUserPort)
-			s.ports.Unlock()
 			log.Printf("Failed to accept end user connection: %v\n", err)
 			continue
 		}
