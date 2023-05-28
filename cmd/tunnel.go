@@ -39,7 +39,7 @@ var localCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Invalid local port: %v", err)
 		}
-		runClient(serverAddress, localAddress, serverPort, localPort)
+		runClient(serverAddress, localPort)
 	},
 }
 
@@ -64,15 +64,11 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 }
 
-func Execute() {
+func main() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}
-
-func main() {
-	Execute()
 }
 
 // runServer runs the server mode.
@@ -102,8 +98,8 @@ func runServer(port int) {
 }
 
 // runClient runs the client mode.
-func runClient(serverAddress string, localAddress string, serverPort int, localPort int) {
-	client := client.NewClient(serverAddress, localAddress, serverPort, localPort)
+func runClient(serverAddress string, localPort int) {
+	client := client.NewClient(fmt.Sprintf("%s:%d", serverAddress, serverPort), fmt.Sprintf("localhost:%d", localPort))
 
 	err := client.Connect()
 	if err != nil {

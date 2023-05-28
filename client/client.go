@@ -13,24 +13,20 @@ import (
 type Client struct {
 	serverAddress string
 	localAddress  string
-	serverPort    int
-	localPort     int
 	session       *yamux.Session
 	endUserPort   int
 }
 
-func NewClient(serverAddr string, localAddr string, serverPort int, localPort int) *Client {
+func NewClient(serverAddr string, localAddr string) *Client {
 	return &Client{
 		serverAddress: serverAddr,
 		localAddress:  localAddr,
-		serverPort:    serverPort,
-		localPort:     localPort,
 	}
 }
 
 func (c *Client) Connect() error {
 	// Connect to the server
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", c.serverAddress, c.serverPort))
+	conn, err := net.Dial("tcp", c.serverAddress)
 	if err != nil {
 		return fmt.Errorf("failed to connect to server: %w", err)
 	}
@@ -65,7 +61,7 @@ func (c *Client) Start() error {
 			return fmt.Errorf("failed to accept new stream: %w", err)
 		}
 		go func() {
-			newLocalConnection, err := net.Dial("tcp", fmt.Sprintf("%s:%d", c.localAddress, c.localPort))
+			newLocalConnection, err := net.Dial("tcp", c.localAddress)
 			if err != nil {
 				fmt.Printf("failed to connect to local port: %v\n", err)
 				return

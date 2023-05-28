@@ -3,9 +3,11 @@ package server
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/yamux"
 
@@ -13,9 +15,12 @@ import (
 )
 
 type Server struct {
-	listener  net.Listener
-	listeners sync.Map
-	ports     sync.Map
+	listener net.Listener
+	rand     *rand.Rand
+	ports    struct {
+		sync.Mutex
+		list []int
+	}
 }
 
 func NewServer(address string) (*Server, error) {
@@ -23,9 +28,19 @@ func NewServer(address string) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to listen: %w", err)
 	}
+
 	return &Server{
 		listener: listener,
+		rand:     rand.New(rand.NewSource(time.Now().UnixNano())),
 	}, nil
+}
+
+func (s *Server) SetPortRange(start int, end int) {
+	for port := start; port <= end; port++ {
+		s.ports.Lock()
+		s.ports.list = append(s.ports.list, port)
+		s.ports.Unlock()
+	}
 }
 
 func (s *Server) SetPorts(ports []string) {
@@ -35,7 +50,9 @@ func (s *Server) SetPorts(ports []string) {
 			log.Printf("Invalid port: %v\n", port)
 			continue
 		}
-		s.ports.Store(p, true)
+		s.ports.Lock()
+		s.ports.list = append(s.ports.list, p)
+		s.ports.Unlock()
 	}
 }
 
@@ -59,27 +76,26 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	var endUserListener net.Listener
 	var err error
 
-	s.ports.Range(func(key, value interface{}) bool {
-		port, _ := key.(int)
-		endUserListener, err = net.Listen("tcp", fmt.Sprintf(":%d", port))
+	s.ports.Lock()
+	if len(s.ports.list) == 0 {
+		endUserListener, err = net.Listen("tcp", ":0") // 0 lets the system pick an available port
+	} else {
+		randPortIdx := s.rand.Intn(len(s.ports.list))
+		randPort := s.ports.list[randPortIdx]
+		endUserListener, err = net.Listen("tcp", fmt.Sprintf(":%d", randPort))
 		if err == nil {
-			s.ports.Delete(key)
-			return false
+			// remove port from list
+			s.ports.list = append(s.ports.list[:randPortIdx], s.ports.list[randPortIdx+1:]...)
 		}
-		return true
-	})
+	}
+	s.ports.Unlock()
 
 	if err != nil {
-		endUserListener, err = net.Listen("tcp", ":0") // 0 lets the system pick an available port
-		if err != nil {
-			log.Printf("Failed to listen for end users: %v\n", err)
-			return
-		}
+		log.Printf("Failed to listen for end users: %v\n", err)
+		return
 	}
 
 	defer endUserListener.Close()
-
-	s.listeners.Store(endUserListener.Addr().(*net.TCPAddr).Port, endUserListener)
 
 	fmt.Fprintf(clientConn, "%d\n", endUserListener.Addr().(*net.TCPAddr).Port)
 
@@ -111,15 +127,4 @@ func (s *Server) handleClient(clientConn net.Conn) {
 			pkg.Proxy(stream, endUserConn)
 		}()
 	}
-}
-
-func (s *Server) Close() {
-	s.listener.Close()
-
-	s.listeners.Range(func(key, value interface{}) bool {
-		if listener, ok := value.(net.Listener); ok {
-			listener.Close()
-		}
-		return true
-	})
 }
