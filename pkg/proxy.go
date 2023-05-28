@@ -4,32 +4,28 @@ import (
 	"io"
 	"log"
 	"net"
+	"sync"
 )
 
-// Proxy handles bidirectional proxying of TCP connections.
-type Proxy struct {
-	sourceConn      net.Conn
-	destinationConn net.Conn
-}
+// Proxy starts the bidirectional proxy between sourceConn and destinationConn
+func Proxy(sourceConn net.Conn, destinationConn net.Conn) {
+	var wg sync.WaitGroup
+	wg.Add(2) // We will wait for two goroutines
 
-// NewProxy creates a new instance of the Proxy.
-func NewProxy(sourceConn net.Conn, destinationConn net.Conn) *Proxy {
-	return &Proxy{
-		sourceConn:      sourceConn,
-		destinationConn: destinationConn,
-	}
-}
+	go proxyData(&wg, sourceConn, destinationConn)
+	go proxyData(&wg, destinationConn, sourceConn)
 
-// StartProxy starts the bidirectional proxy.
-func (p *Proxy) StartProxy() {
-	go p.proxyData(p.sourceConn, p.destinationConn)
-	go p.proxyData(p.destinationConn, p.sourceConn)
+	// Wait for both goroutines to finish then close connections
+	go func() {
+		wg.Wait()
+		sourceConn.Close()
+		destinationConn.Close()
+	}()
 }
 
 // proxyData proxies data between the source and destination connections.
-func (p *Proxy) proxyData(sourceConn net.Conn, destinationConn net.Conn) {
-	defer sourceConn.Close()
-	defer destinationConn.Close()
+func proxyData(wg *sync.WaitGroup, destinationConn net.Conn, sourceConn net.Conn) {
+	defer wg.Done()
 
 	_, err := io.Copy(destinationConn, sourceConn)
 	if err != nil {

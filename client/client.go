@@ -6,38 +6,43 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/hashicorp/yamux"
 	"github.com/morrisonwill/gigatunnl/pkg"
 )
 
 type Client struct {
-	serverAddr  string
-	localAddr   string
-	serverPort  int
-	localPort   int
-	conn        net.Conn
-	localConn   net.Conn
-	endUserPort int
+	serverAddress string
+	localAddress  string
+	serverPort    int
+	localPort     int
+	session       *yamux.Session
+	endUserPort   int
 }
 
 func NewClient(serverAddr string, localAddr string, serverPort int, localPort int) *Client {
 	return &Client{
-		serverAddr: serverAddr,
-		localAddr:  localAddr,
-		serverPort: serverPort,
-		localPort:  localPort,
+		serverAddress: serverAddr,
+		localAddress:  localAddr,
+		serverPort:    serverPort,
+		localPort:     localPort,
 	}
 }
 
 func (c *Client) Connect() error {
 	// Connect to the server
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", c.serverAddr, c.serverPort))
+	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", c.serverAddress, c.serverPort))
 	if err != nil {
 		return fmt.Errorf("failed to connect to server: %w", err)
 	}
-	c.conn = conn
+	session, err := yamux.Client(conn, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create yamux session: %w", err)
+	}
+
+	c.session = session
 
 	// Get end user port from the server
-	reader := bufio.NewReader(c.conn)
+	reader := bufio.NewReader(conn)
 	line, _, err := reader.ReadLine()
 	if err != nil {
 		return fmt.Errorf("failed to read end user port: %w", err)
@@ -49,25 +54,27 @@ func (c *Client) Connect() error {
 	c.endUserPort = endUserPort
 	fmt.Printf("End user port on server: %d\n", endUserPort)
 
-	// Connect to the local service
-	localConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", c.localAddr, c.localPort))
-	if err != nil {
-		return fmt.Errorf("failed to connect to local service: %w", err)
-	}
-	c.localConn = localConn
-
 	return nil
 }
 
 func (c *Client) Start() error {
-	// Start the bidirectional proxy
-	proxy := pkg.NewProxy(c.localConn, c.conn)
-	proxy.StartProxy()
-
-	return nil
+	// Accept new yamux streams and forward them to the local port
+	for {
+		newStream, err := c.session.Accept()
+		if err != nil {
+			return fmt.Errorf("failed to accept new stream: %w", err)
+		}
+		go func() {
+			newLocalConnection, err := net.Dial("tcp", fmt.Sprintf("%s:%d", c.localAddress, c.localPort))
+			if err != nil {
+				fmt.Printf("failed to connect to local port: %v\n", err)
+				return
+			}
+			pkg.Proxy(newStream, newLocalConnection)
+		}()
+	}
 }
 
 func (c *Client) Close() {
-	c.conn.Close()
-	c.localConn.Close()
+	c.session.Close()
 }

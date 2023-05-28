@@ -6,6 +6,8 @@ import (
 	"net"
 	"sync"
 
+	"github.com/hashicorp/yamux"
+
 	"github.com/morrisonwill/gigatunnl/pkg"
 )
 
@@ -53,6 +55,12 @@ func (s *Server) handleClient(clientConn net.Conn) {
 
 	fmt.Fprintf(clientConn, "%d\n", endUserListener.Addr().(*net.TCPAddr).Port)
 
+	session, err := yamux.Server(clientConn, nil)
+	if err != nil {
+		log.Printf("Failed to create yamux session: %v\n", err)
+		return
+	}
+
 	for {
 		// Accept an end user connection
 		endUserConn, err := endUserListener.Accept()
@@ -61,11 +69,19 @@ func (s *Server) handleClient(clientConn net.Conn) {
 			continue
 		}
 
-		log.Println("Accepted end user connection:", endUserConn.RemoteAddr())
+		go func() {
+			stream, err := session.Open()
 
-		// Start a proxy between the client and the end user
-		proxy := pkg.NewProxy(clientConn, endUserConn)
-		go proxy.StartProxy()
+			if err != nil {
+				log.Printf("Failed to accept end user connection: %v\n", err)
+				return
+			}
+
+			log.Println("Accepted end user connection:", endUserConn.RemoteAddr())
+
+			// Start a proxy between the client and the end user
+			pkg.Proxy(stream, endUserConn)
+		}()
 	}
 }
 

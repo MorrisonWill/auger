@@ -9,36 +9,6 @@ import (
 	"github.com/morrisonwill/gigatunnl/server"
 )
 
-// TODO: yamux
-/*
-
-client:
-connection = dial("bore.pub")
-server = Yamux(connection)
-for {
-  newConnection = server.Accept()
-  go func () {
-    local = dial("localhost")
-    proxy(local, newConnection)
-  }()
-}
-
-server:
-control = listener("bore.pub")
-for {
-  client = Yamux(control.Accept())
-  go func () {
-    server = listener("bore.pub:0")
-    for {
-      proxy(server.Accept(), client.Open())
-    }
-  }()
-}
-
-*/
-// TODO: heartbeats
-// TODO: better protocol for different types of messages
-
 func main() {
 	// Parse command-line arguments
 	mode := flag.String("mode", "", "The mode to run: 'server' or 'client'")
@@ -77,8 +47,13 @@ func runServer() {
 
 // runClient runs the client mode.
 func runClient() {
+	serverAddress := "localhost"
+	serverPort := 3000
 
-	client := client.NewClient("localhost", "localhost", 3000, 8000)
+	localAddress := "localhost"
+	localPort := 3001
+
+	client := client.NewClient(serverAddress, localAddress, serverPort, localPort)
 
 	err := client.Connect()
 	if err != nil {
