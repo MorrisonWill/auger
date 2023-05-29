@@ -10,7 +10,7 @@ import (
 	"syscall"
 
 	"github.com/hashicorp/yamux"
-	"github.com/morrisonwill/tunnel/pkg"
+	"github.com/morrisonwill/tunnel/proxy"
 )
 
 type Client struct {
@@ -79,7 +79,7 @@ func (c *Client) Start() error {
 				fmt.Printf("failed to connect to local port: %v\n", err)
 				return
 			}
-			pkg.Proxy(newStream, newLocalConnection)
+			proxy.Proxy(newStream, newLocalConnection)
 		}()
 	}
 }

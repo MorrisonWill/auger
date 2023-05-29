@@ -11,7 +11,7 @@ import (
 
 	"github.com/hashicorp/yamux"
 
-	"github.com/morrisonwill/tunnel/pkg"
+	"github.com/morrisonwill/tunnel/proxy"
 )
 
 type Server struct {
@@ -78,7 +78,6 @@ func (s *Server) Start() {
 }
 
 func (s *Server) handleClient(clientConn net.Conn) {
-	doneChan := make(chan bool)
 
 	defer clientConn.Close()
 
@@ -118,51 +117,33 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		return
 	}
 
-	// check if client is still alive
-	go func() {
-		for {
-			test, err := session.Ping()
-			fmt.Println(test)
-			if err != nil {
-				log.Println("Client disconnected", err)
-				endUserListener.Close()
-				s.ports.Lock()
-				s.ports.list = append(s.ports.list, endUserPort)
-				s.ports.Unlock()
-				doneChan <- true
-				return
-			}
-			time.Sleep(time.Second * 10)
-		}
-	}()
-
 	for {
-		select {
-		case <-doneChan:
-			log.Printf("CLI disconnected, killing proxy")
+		// Open stream for to check if CLI is still alive
+		stream, err := session.Open()
+		if err != nil {
+			log.Printf("CLI has died")
+
+			// add port back to list
+			s.ports.Lock()
+			s.ports.list = append(s.ports.list, endUserPort)
+			s.ports.Unlock()
 			return
-		default:
-			// Accept an end user connection
-			endUserConn, err := endUserListener.Accept()
-			if err != nil {
-				log.Printf("Failed to accept end user connection: %v\n", err)
-				continue
-			}
-
-			go func() {
-				stream, err := session.Open()
-
-				if err != nil {
-					log.Printf("Failed to accept end user connection: %v\n", err)
-					return
-				}
-
-				log.Println("Accepted end user connection:", endUserConn.RemoteAddr())
-
-				// Start a proxy between the client and the end user
-				pkg.Proxy(stream, endUserConn)
-			}()
 		}
+
+		// Accept an end user connection
+		endUserConn, err := endUserListener.Accept()
+		if err != nil {
+			log.Printf("Failed to accept end user connection: %v\n", err)
+			continue
+		}
+
+		go func() {
+
+			log.Println("Accepted end user connection:", endUserConn.RemoteAddr())
+
+			// Start a proxy between the client and the end user
+			proxy.Proxy(stream, endUserConn)
+		}()
 	}
 
 }
