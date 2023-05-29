@@ -22,9 +22,9 @@ While there is a public instance hosted at `tnl.pub` for general use, you are al
 
 ## Usage
 
-\`\`\`bash
+```bash
 tunnel local 8080 --remote-address tnl.pub
-\`\`\`
+```
 
 ## Installation
 
