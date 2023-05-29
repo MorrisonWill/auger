@@ -136,30 +136,32 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	}()
 
 	for {
-		if <-doneChan {
+		select {
+		case <-doneChan:
 			log.Printf("CLI disconnected, killing proxy")
 			return
-		}
-
-		// Accept an end user connection
-		endUserConn, err := endUserListener.Accept()
-		if err != nil {
-			log.Printf("Failed to accept end user connection: %v\n", err)
-			continue
-		}
-
-		go func() {
-			stream, err := session.Open()
-
+		default:
+			// Accept an end user connection
+			endUserConn, err := endUserListener.Accept()
 			if err != nil {
 				log.Printf("Failed to accept end user connection: %v\n", err)
-				return
+				continue
 			}
 
-			log.Println("Accepted end user connection:", endUserConn.RemoteAddr())
+			go func() {
+				stream, err := session.Open()
 
-			// Start a proxy between the client and the end user
-			pkg.Proxy(stream, endUserConn)
-		}()
+				if err != nil {
+					log.Printf("Failed to accept end user connection: %v\n", err)
+					return
+				}
+
+				log.Println("Accepted end user connection:", endUserConn.RemoteAddr())
+
+				// Start a proxy between the client and the end user
+				pkg.Proxy(stream, endUserConn)
+			}()
+		}
 	}
+
 }

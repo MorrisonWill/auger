@@ -80,7 +80,6 @@ func (c *Client) Start() error {
 				return
 			}
 			pkg.Proxy(newStream, newLocalConnection)
-			c.session.Close()
 		}()
 	}
 }

@@ -14,7 +14,9 @@ import (
 
 // TODO: add graceful shutdown on both sides
 // TODO: add good error handling on both sides
-// TODO: test is not running, hanging somewhere
+// TODO: there's a period between CLI disconnecting and server stopping where Failed to accept end user connection
+// TODO: use https://github.com/charmbracelet/log
+// maybe https://github.com/charmbracelet/lipgloss
 
 var (
 	serverAddress       string
