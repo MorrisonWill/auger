@@ -48,7 +48,7 @@ func server() {
 
 func client() {
 	// Get a TCP connection
-	conn, err := net.Dial("tcp", "localhost:8080")
+	conn, err := net.Dial("tcp", "tnl.pub:8080")
 	if err != nil {
 		panic(err)
 	}
