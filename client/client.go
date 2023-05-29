@@ -40,8 +40,6 @@ func (c *Client) Connect() error {
 	// Enable keepalives
 	config.KeepAliveInterval = 30 * time.Second
 
-	config.LogOutput = os.Stderr
-
 	session, err := yamux.Client(conn, config)
 	if err != nil {
 		return err

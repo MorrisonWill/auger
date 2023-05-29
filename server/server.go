@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"os"
 
 	"math/rand"
 	"net"
@@ -120,14 +119,14 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	// Enable keepalives
 	config.KeepAliveInterval = 30 * time.Second
 
-	config.LogOutput = os.Stderr
-
 	session, err := yamux.Server(clientConn, config)
 	if err != nil {
 		log.Errorf("Failed to create session with client: %v\n", err)
 		return
 	}
 
+	// TODO: this approach does not work. It opens more streams than it needs and then blocks
+	// TODO: find out why deploying on tnl.pub fails
 	for {
 		// Open stream for to check if CLI is still alive
 		stream, err := session.Open()
@@ -142,7 +141,9 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		}
 
 		// Accept an end user connection
+		log.Info("blocking")
 		endUserConn, err := endUserListener.Accept()
+		log.Info("unblocked")
 		if err != nil {
 			log.Errorf("Failed to accept end user connection: %v\n", err)
 			continue
