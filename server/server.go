@@ -123,7 +123,7 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		for {
 			_, err := session.Ping()
 			if err != nil {
-				log.Printf("Client disconnected")
+				log.Println("Client disconnected", err)
 				endUserListener.Close()
 				s.ports.Lock()
 				s.ports.list = append(s.ports.list, endUserPort)
