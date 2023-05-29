@@ -91,7 +91,7 @@ func getEnvAsInt(name string, defaultValue int) int {
 
 	value, err := strconv.Atoi(valueStr)
 	if err != nil {
-		log.Printf("Failed to convert %s to integer. Using default value: %v", name, defaultValue)
+		log.Warnf("Failed to convert %s to integer. Using default value: %v", name, defaultValue)
 		return defaultValue
 	}
 
@@ -100,8 +100,7 @@ func getEnvAsInt(name string, defaultValue int) int {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
 
@@ -139,10 +138,6 @@ func runClient(serverAddress string, localPort int) {
 
 	err = client.Start()
 	if err != nil {
-		log.Fatalf("Failed to start client: %v", err)
+		log.Fatalf("Something went wrong: %v", err)
 	}
-
-	fmt.Println("Client is running. Press Ctrl+C to exit.")
-	// Block indefinitely to keep the client running
-	select {}
 }

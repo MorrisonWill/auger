@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/hashicorp/yamux"
@@ -33,7 +34,15 @@ func (c *Client) Connect() error {
 	if err != nil {
 		return err
 	}
-	session, err := yamux.Client(conn, nil)
+
+	// Define Yamux config
+	config := yamux.DefaultConfig()
+	// Enable keepalives
+	config.KeepAliveInterval = 30 * time.Second
+
+	config.LogOutput = os.Stderr
+
+	session, err := yamux.Client(conn, config)
 	if err != nil {
 		return err
 	}

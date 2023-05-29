@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"os"
 
 	"math/rand"
 	"net"
@@ -114,7 +115,14 @@ func (s *Server) handleClient(clientConn net.Conn) {
 
 	fmt.Fprintf(clientConn, "%d\n", endUserListener.Addr().(*net.TCPAddr).Port)
 
-	session, err := yamux.Server(clientConn, nil)
+	// Define Yamux config
+	config := yamux.DefaultConfig()
+	// Enable keepalives
+	config.KeepAliveInterval = 30 * time.Second
+
+	config.LogOutput = os.Stderr
+
+	session, err := yamux.Server(clientConn, config)
 	if err != nil {
 		log.Errorf("Failed to create session with client: %v\n", err)
 		return
