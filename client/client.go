@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -76,6 +77,7 @@ func (c *Client) Start() error {
 
 	// Accept new yamux streams and forward them to the local port
 	for {
+		fmt.Println("Waiting for new stream")
 		newStream, err := c.session.Accept()
 		if err != nil {
 			return err

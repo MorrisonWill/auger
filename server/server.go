@@ -129,6 +129,7 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	// TODO: find out why deploying on tnl.pub fails
 	for {
 		// Open stream for to check if CLI is still alive
+		fmt.Println("opening new stream")
 		stream, err := session.Open()
 		if err != nil {
 			log.Info("Client (CLI) has died")
