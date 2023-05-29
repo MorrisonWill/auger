@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO: not working with tnl.pub, i/o deadline (investigate Ping)
 // TODO: add graceful shutdown on both sides
 // TODO: add good error handling on both sides
 // TODO: there's a period between CLI disconnecting and server stopping where Failed to accept end user connection
