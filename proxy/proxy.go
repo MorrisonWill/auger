@@ -30,6 +30,6 @@ func proxyData(wg *sync.WaitGroup, destinationConn net.Conn, sourceConn net.Conn
 
 	_, err := io.Copy(destinationConn, sourceConn)
 	if err != nil {
-		log.Errorf("Error copying data from source to destination:", err.Error())
+		log.Errorf("Error copying data from source to destination: %v", err.Error())
 	}
 }
