@@ -1,6 +1,6 @@
 # Tunnel (WIP)
 
-> A fast, flexible, and open-source tunneling tool.
+> A fast and flexible tunneling tool.
 
 <!-- Add Video Examples Here -->
 
