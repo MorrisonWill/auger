@@ -2,13 +2,13 @@ package client
 
 import (
 	"bufio"
-	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 
+	"github.com/charmbracelet/log"
 	"github.com/hashicorp/yamux"
 	"github.com/morrisonwill/tunnel/proxy"
 )
@@ -31,11 +31,11 @@ func (c *Client) Connect() error {
 	// Connect to the server
 	conn, err := net.Dial("tcp", c.serverAddress)
 	if err != nil {
-		return fmt.Errorf("failed to connect to server: %w", err)
+		return err
 	}
 	session, err := yamux.Client(conn, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create yamux session: %w", err)
+		return err
 	}
 
 	c.session = session
@@ -44,14 +44,14 @@ func (c *Client) Connect() error {
 	reader := bufio.NewReader(conn)
 	line, _, err := reader.ReadLine()
 	if err != nil {
-		return fmt.Errorf("failed to read end user port: %w", err)
+		return err
 	}
 	endUserPort, err := strconv.Atoi(string(line))
 	if err != nil {
-		return fmt.Errorf("invalid end user port: %w", err)
+		return err
 	}
 	c.EndUserPort = endUserPort
-	fmt.Printf("End user port on server: %d\n", endUserPort)
+	log.Infof("Listening on %s:%d\n", c.serverAddress, endUserPort)
 
 	return nil
 }
@@ -71,19 +71,15 @@ func (c *Client) Start() error {
 	for {
 		newStream, err := c.session.Accept()
 		if err != nil {
-			return fmt.Errorf("failed to accept new stream: %w", err)
+			return err
 		}
 		go func() {
 			newLocalConnection, err := net.Dial("tcp", c.localAddress)
 			if err != nil {
-				fmt.Printf("failed to connect to local port: %v\n", err)
+				log.Errorf("Failed to connect to local port: %v\n", err)
 				return
 			}
 			proxy.Proxy(newStream, newLocalConnection)
 		}()
 	}
-}
-
-func (c *Client) Close() {
-	c.session.Close()
 }

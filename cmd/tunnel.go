@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"github.com/morrisonwill/tunnel/client"
 	"github.com/morrisonwill/tunnel/server"
 	"github.com/spf13/cobra"
@@ -69,6 +69,8 @@ func init() {
 		log.Fatalf("Failed to mark remote-address as required: %v", err)
 	}
 
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+
 	rootCmd.AddCommand(localCmd)
 	rootCmd.AddCommand(serverCmd)
 }
@@ -124,11 +126,6 @@ func runServer(port int) {
 
 	// Start the server
 	server.Start()
-
-	fmt.Println("Server is running. Press Ctrl+C to exit.")
-
-	// Block indefinitely to keep the server running
-	select {}
 }
 
 // runClient runs the client mode.

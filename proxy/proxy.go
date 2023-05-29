@@ -2,9 +2,10 @@ package proxy
 
 import (
 	"io"
-	"log"
 	"net"
 	"sync"
+
+	"github.com/charmbracelet/log"
 )
 
 // Proxy starts the bidirectional proxy between sourceConn and destinationConn
@@ -29,7 +30,6 @@ func proxyData(wg *sync.WaitGroup, destinationConn net.Conn, sourceConn net.Conn
 
 	_, err := io.Copy(destinationConn, sourceConn)
 	if err != nil {
-		log.Println("Error copying data from source to destination:", err.Error())
+		log.Errorf("Error copying data from source to destination:", err.Error())
 	}
-	log.Println("Finished proxying data")
 }

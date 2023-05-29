@@ -2,12 +2,14 @@ package server
 
 import (
 	"fmt"
-	"log"
+
 	"math/rand"
 	"net"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/hashicorp/yamux"
 
@@ -18,6 +20,7 @@ type Server struct {
 	listener net.Listener
 	rand     *rand.Rand
 	ports    ports
+	address  string
 }
 
 type ports struct {
@@ -37,12 +40,11 @@ func NewServer(address string) (*Server, error) {
 		ports: ports{
 			list: nil,
 		},
+		address: address,
 	}, nil
 }
 
 func (s *Server) SetPortRange(start int, end int) {
-	fmt.Println("ports before", s.ports.list)
-
 	for port := start; port <= end; port++ {
 		s.ports.Lock()
 		s.ports.list = append(s.ports.list, port)
@@ -54,7 +56,7 @@ func (s *Server) SetPorts(ports []string) {
 	for _, port := range ports {
 		p, err := strconv.Atoi(port)
 		if err != nil {
-			log.Printf("Invalid port: %v\n", port)
+			log.Infof("Invalid port: %v\n", port)
 			continue
 		}
 		s.ports.Lock()
@@ -64,14 +66,15 @@ func (s *Server) SetPorts(ports []string) {
 }
 
 func (s *Server) Start() {
-	log.Printf("Server listening on %s\n", s.listener.Addr().String())
+	log.Infof("Server is listening on %s", s.address)
+
 	for {
 		clientConn, err := s.listener.Accept()
 		if err != nil {
-			log.Printf("Failed to accept client connection: %v\n", err)
+			log.Errorf("Failed to accept client connection: %v\n", err)
 			continue
 		}
-		log.Println("Accepted client connection:", clientConn.RemoteAddr())
+		log.Infof("New client: %s", clientConn.RemoteAddr())
 
 		go s.handleClient(clientConn)
 	}
@@ -82,6 +85,7 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	defer clientConn.Close()
 
 	var endUserListener net.Listener
+
 	var err error
 
 	var endUserPort int
@@ -89,23 +93,22 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	s.ports.Lock()
 	if s.ports.list == nil {
 		endUserListener, err = net.Listen("tcp", ":0") // 0 lets the system pick an available port
+		if err != nil {
+			log.Errorf("Failed to listen for end users %v", err)
+			return
+		}
 		endUserPort = endUserListener.Addr().(*net.TCPAddr).Port
 	} else {
 		randPortIdx := s.rand.Intn(len(s.ports.list))
 		endUserPort = s.ports.list[randPortIdx]
 		endUserListener, err = net.Listen("tcp", fmt.Sprintf(":%d", endUserPort))
-		if err == nil {
-			// remove port from list
-			s.ports.list = append(s.ports.list[:randPortIdx], s.ports.list[randPortIdx+1:]...)
+		if err != nil {
+			log.Errorf("Failed to listen for end users %v", err)
+			return
 		}
+		s.ports.list = append(s.ports.list[:randPortIdx], s.ports.list[randPortIdx+1:]...)
 	}
-
 	s.ports.Unlock()
-
-	if err != nil {
-		log.Printf("Failed to listen for end users: %v\n", err)
-		return
-	}
 
 	defer endUserListener.Close()
 
@@ -113,7 +116,7 @@ func (s *Server) handleClient(clientConn net.Conn) {
 
 	session, err := yamux.Server(clientConn, nil)
 	if err != nil {
-		log.Printf("Failed to create yamux session: %v\n", err)
+		log.Errorf("Failed to create session with client: %v\n", err)
 		return
 	}
 
@@ -121,7 +124,7 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		// Open stream for to check if CLI is still alive
 		stream, err := session.Open()
 		if err != nil {
-			log.Printf("CLI has died")
+			log.Info("Client (CLI) has died")
 
 			// add port back to list
 			s.ports.Lock()
@@ -133,13 +136,12 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		// Accept an end user connection
 		endUserConn, err := endUserListener.Accept()
 		if err != nil {
-			log.Printf("Failed to accept end user connection: %v\n", err)
+			log.Errorf("Failed to accept end user connection: %v\n", err)
 			continue
 		}
 
 		go func() {
-
-			log.Println("Accepted end user connection:", endUserConn.RemoteAddr())
+			log.Infof("Accepted end user: %s", endUserConn.RemoteAddr())
 
 			// Start a proxy between the client and the end user
 			proxy.Proxy(stream, endUserConn)
