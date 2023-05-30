@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	"github.com/hashicorp/yamux"
 )
@@ -16,6 +17,7 @@ func main() {
 		fmt.Println("client")
 		client()
 	}
+	time.Sleep(time.Second * 5)
 }
 
 func server() {
@@ -36,7 +38,6 @@ func server() {
 		panic(err)
 	}
 
-	// Accept a stream
 	stream, err := session.Open()
 	if err != nil {
 		panic(err)
