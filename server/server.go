@@ -34,6 +34,7 @@ func NewServer(address string) (*Server, error) {
 		return nil, fmt.Errorf("failed to listen: %w", err)
 	}
 
+	// TODO consider moving all this to start or vica versa
 	return &Server{
 		listener: listener,
 		rand:     rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -127,6 +128,10 @@ func (s *Server) handleClient(clientConn net.Conn) {
 
 	// TODO: this approach does not work. It opens more streams than it needs and then blocks
 	// TODO: find out why deploying on tnl.pub fails
+
+	// TODO: accept end user first, then if can't open a session close endusersession
+	// TODO: also need ping to cleanup ports, could run every minute
+	// TODO: in big loop, endUserListener can be closed from ping goroutine and then .Accept will error
 	for {
 		// Open stream for to check if CLI is still alive
 		fmt.Println("opening new stream")
@@ -144,6 +149,7 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		// Accept an end user connection
 		log.Info("blocking")
 		endUserConn, err := endUserListener.Accept()
+
 		log.Info("unblocked")
 		if err != nil {
 			log.Errorf("Failed to accept end user connection: %v\n", err)
