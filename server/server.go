@@ -121,13 +121,13 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	config.KeepAliveInterval = 30 * time.Second
 
 	session, err := yamux.Server(clientConn, config)
+
 	if err != nil {
 		log.Errorf("Failed to create session with client: %v\n", err)
 		return
 	}
 
-	time.Sleep(time.Second * 5)
-
+	// TODO: ping not working over network
 	// check if client is still alive
 	go func() {
 		for {
@@ -145,7 +145,6 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		}
 	}()
 
-	// TODO: this approach does not work. It opens more streams than it needs and then blocks
 	// TODO: find out why deploying on tnl.pub fails
 
 	// TODO: accept end user first, then if can't open a session close endusersession
@@ -156,6 +155,7 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	for {
 		endUserConn, err := endUserListener.Accept()
 		if err != nil {
+			// TODO: check what error type is and if it's closed then break, otherwise continue
 			log.Errorf("Failed to accept end user connection: %v\n", err)
 			// TODO: continue or break? What can cause this to error?
 			break
