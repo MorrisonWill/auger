@@ -126,6 +126,8 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		return
 	}
 
+	time.Sleep(time.Second * 5)
+
 	// check if client is still alive
 	go func() {
 		for {
