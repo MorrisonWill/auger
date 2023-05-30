@@ -126,6 +126,22 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		return
 	}
 
+	// check if client is still alive
+	go func() {
+		for {
+			_, err := session.Ping()
+			if err != nil {
+				log.Printf("Client disconnected", err)
+				endUserListener.Close()
+				s.ports.Lock()
+				s.ports.list = append(s.ports.list, endUserPort)
+				s.ports.Unlock()
+				return
+			}
+			time.Sleep(time.Second * 10)
+		}
+	}()
+
 	// TODO: this approach does not work. It opens more streams than it needs and then blocks
 	// TODO: find out why deploying on tnl.pub fails
 
@@ -133,8 +149,14 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	// TODO: also need ping to cleanup ports, could run every minute
 	// TODO: in big loop, endUserListener can be closed from ping goroutine and then .Accept will error
 	for {
+		endUserConn, err := endUserListener.Accept()
+		if err != nil {
+			log.Errorf("Failed to accept end user connection: %v\n", err)
+			// TODO: continue or break? What can cause this to error?
+			break
+		}
+
 		// Open stream for to check if CLI is still alive
-		fmt.Println("opening new stream")
 		stream, err := session.Open()
 		if err != nil {
 			log.Info("Client (CLI) has died")
@@ -147,14 +169,6 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		}
 
 		// Accept an end user connection
-		log.Info("blocking")
-		endUserConn, err := endUserListener.Accept()
-
-		log.Info("unblocked")
-		if err != nil {
-			log.Errorf("Failed to accept end user connection: %v\n", err)
-			continue
-		}
 
 		go func() {
 			log.Infof("Accepted end user: %s", endUserConn.RemoteAddr())
