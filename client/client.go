@@ -41,6 +41,7 @@ func (c *Client) Connect() error {
 	// Enable keepalives
 	config.KeepAliveInterval = 30 * time.Second
 
+	//TODO move this to below the reading of port.
 	session, err := yamux.Client(conn, config)
 	if err != nil {
 		return err
@@ -49,6 +50,8 @@ func (c *Client) Connect() error {
 	c.session = session
 
 	// Get end user port from the server
+	//TODO switch to byte[] and binary.Uint16
+	//FIXME you need to do this over the yamux session.
 	reader := bufio.NewReader(conn)
 	line, _, err := reader.ReadLine()
 	if err != nil {
