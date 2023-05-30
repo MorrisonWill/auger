@@ -148,6 +148,8 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	// TODO: accept end user first, then if can't open a session close endusersession
 	// TODO: also need ping to cleanup ports, could run every minute
 	// TODO: in big loop, endUserListener can be closed from ping goroutine and then .Accept will error
+
+	// TODO: still getting deadline reached
 	for {
 		endUserConn, err := endUserListener.Accept()
 		if err != nil {
