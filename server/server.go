@@ -135,7 +135,6 @@ func (s *Server) handleClient(clientConn net.Conn) {
 			if err != nil {
 				endUserListener.Close()
 				session.Close()
-				log.Infof("Client disconnected. Freeing port %d", endUserPort)
 				s.ports.Lock()
 				s.ports.list = append(s.ports.list, endUserPort)
 				s.ports.Unlock()
@@ -159,7 +158,7 @@ func (s *Server) handleClient(clientConn net.Conn) {
 
 		stream, err := session.Open()
 		if err != nil {
-			log.Info("Client (CLI) has died")
+			log.Info("Client disconnected:" + clientConn.RemoteAddr().String())
 			endUserConn.Close()
 
 			// add port back to list
@@ -171,8 +170,6 @@ func (s *Server) handleClient(clientConn net.Conn) {
 
 		// Accept an end user connection
 		go func() {
-			log.Infof("Accepted end user: %s", endUserConn.RemoteAddr())
-
 			// Start a proxy between the client and the end user
 			proxy.Proxy(stream, endUserConn)
 		}()

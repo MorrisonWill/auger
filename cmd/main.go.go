@@ -34,8 +34,8 @@ Complete documentation is available at https://github.com/morrisonwill/auger`,
 	},
 }
 
-var localCmd = &cobra.Command{
-	Use:   "local [localPort]",
+var clientCmd = &cobra.Command{
+	Use:   "client [localPort]",
 	Short: "Proxies local port through remote server",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -60,11 +60,11 @@ func init() {
 	serverCmd.Flags().IntVar(&maxPort, "max-port", getEnvAsInt("AUGER_MAX_PORT", 0), "Maximum port range")
 	serverCmd.Flags().StringVar(&commaSeparatedPorts, "ports", getEnvAsString("AUGER_PORTS", ""), "Comma-separated ports")
 
-	localCmd.Flags().StringVar(&serverAddress, "to", getEnvAsString("AUGER_TO", ""), "Address of the server to connect to")
+	clientCmd.Flags().StringVar(&serverAddress, "to", getEnvAsString("AUGER_TO", ""), "Address of the server to connect to")
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
-	rootCmd.AddCommand(localCmd)
+	rootCmd.AddCommand(clientCmd)
 	rootCmd.AddCommand(serverCmd)
 }
 
