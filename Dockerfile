@@ -8,7 +8,7 @@ RUN go mod download
 # Copy the entire project into the container
 COPY . .
 
-RUN go build -o auger cmd/auger.go
+RUN go build -o auger cmd/auger/main.go
 
 # Create a new lightweight image
 FROM alpine:3.18
