@@ -1,4 +1,4 @@
-# Auger (WIP)
+# Auger
 
 > A fast and flexible tunneling tool.
 
