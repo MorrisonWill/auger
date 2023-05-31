@@ -23,7 +23,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: morrisonwill/tunnel
+          images: willmorrison/tunnel
 
       - name: Build and push
         id: docker_build
