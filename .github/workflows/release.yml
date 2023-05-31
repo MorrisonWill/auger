@@ -10,19 +10,13 @@ jobs:
       matrix:
         goos: [linux, windows, darwin]
         goarch: ["386", amd64, arm64]
-        exclude:
-          - goarch: "386"
-            goos: darwin
-          - goarch: arm64
-            goos: windows
     steps:
       - uses: actions/checkout@v3
-      - uses: wangyoucao577/go-release-action@v1.38
+      - uses: wangyoucao577/go-release-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          goversion: "https://go.dev/dl/go1.20.4.linux-amd64.tar.gz"
           project_path: "./cmd"
           binary_name: "auger"
           extra_files: LICENSE README.md
