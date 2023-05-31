@@ -149,7 +149,6 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		if err != nil {
 
 			if errors.Is(err, net.ErrClosed) {
-				log.Infof("End user connection closed: %v\n", endUserConn.RemoteAddr())
 				break
 			}
 			log.Errorf("Failed to accept end user connection: %v\n", err)
