@@ -8,7 +8,7 @@ RUN go mod download
 # Copy the entire project into the container
 COPY . .
 
-RUN go build -o tunnel cmd/tunnel.go
+RUN go build -o auger cmd/auger.go
 
 # Create a new lightweight image
 FROM alpine:3.18
@@ -16,6 +16,6 @@ FROM alpine:3.18
 WORKDIR /app
 
 # Copy the built executable from the previous stage
-COPY --from=build /app/tunnel .
+COPY --from=build /app/auger .
 
-ENTRYPOINT ["./tunnel", "server"]
+ENTRYPOINT ["./auger", "server"]

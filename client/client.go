@@ -12,7 +12,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/hashicorp/yamux"
-	"github.com/morrisonwill/tunnel/proxy"
+	"github.com/morrisonwill/auger/proxy"
 )
 
 type Client struct {

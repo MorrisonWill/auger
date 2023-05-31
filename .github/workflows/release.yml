@@ -21,9 +21,9 @@ jobs:
 
       - name: Build
         run: |
-          GOOS=darwin GOARCH=amd64 go build -o tunnel_mac cmd/tunnel.go
-          GOOS=linux GOARCH=amd64 go build -o tunnel_linux cmd/tunnel.go
-          GOOS=windows GOARCH=amd64 go build -o tunnel_windows.exe cmd/tunnel.go
+          GOOS=darwin GOARCH=amd64 go build -o auger_mac cmd/auger.go
+          GOOS=linux GOARCH=amd64 go build -o auger_linux cmd/auger.go
+          GOOS=windows GOARCH=amd64 go build -o auger_windows.exe cmd/auger.go
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
@@ -31,8 +31,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./tunnel_mac
-          asset_name: tunnel_mac
+          asset_path: ./auger_mac
+          asset_name: auger_mac
           asset_content_type: application/octet-stream
 
       - name: Upload Release Asset
@@ -41,8 +41,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./tunnel_linux
-          asset_name: tunnel_linux
+          asset_path: ./auger_linux
+          asset_name: auger_linux
           asset_content_type: application/octet-stream
 
       - name: Upload Release Asset
@@ -51,6 +51,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./tunnel_windows.exe
-          asset_name: tunnel_windows.exe
+          asset_path: ./auger_windows.exe
+          asset_name: auger_windows.exe
           asset_content_type: application/octet-stream

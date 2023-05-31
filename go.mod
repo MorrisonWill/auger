@@ -1,4 +1,4 @@
-module github.com/morrisonwill/tunnel
+module github.com/morrisonwill/auger
 
 go 1.20
 

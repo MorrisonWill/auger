@@ -8,22 +8,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/morrisonwill/tunnel/client"
-	"github.com/morrisonwill/tunnel/server"
+	"github.com/morrisonwill/auger/client"
+	"github.com/morrisonwill/auger/server"
 )
 
 func TestEndToEnd(t *testing.T) {
 	// Step 1: Start local server
 	startLocalServer()
 
-	// Step 2: Start tunnel server
-	tunnelServer := startTunnelServer()
+	// Step 2: Start auger server
+	augerServer := startAugerServer()
 
-	// Step 3: Start tunnel client
-	tunnelClient := startTunnelClient(tunnelServer)
+	// Step 3: Start auger client
+	augerClient := startAugerClient(augerServer)
 
 	// Step 4: Make a request through the tunnel
-	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", tunnelClient.EndUserPort))
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", augerClient.EndUserPort))
 	if err != nil {
 		t.Fatalf("Failed to make request through the tunnel: %v", err)
 	}
@@ -47,29 +47,29 @@ func startLocalServer() *http.Server {
 	return localServer
 }
 
-func startTunnelServer() *server.Server {
-	tunnelServer, err := server.NewServer("localhost:49152")
+func startAugerServer() *server.Server {
+	augerServer, err := server.NewServer("localhost:49152")
 	if err != nil {
 		log.Fatalf("Failed to create server: %v", err)
 	}
 
-	go tunnelServer.Start()
+	go augerServer.Start()
 	time.Sleep(1 * time.Second)
-	return tunnelServer
+	return augerServer
 }
 
-func startTunnelClient(tunnelServer *server.Server) *client.Client {
-	tunnelClient := client.NewClient("localhost:49152", "localhost:8080")
-	err := tunnelClient.Connect()
+func startAugerClient(augerServer *server.Server) *client.Client {
+	augerClient := client.NewClient("localhost:49152", "localhost:8080")
+	err := augerClient.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to server: %v", err)
 	}
 
 	go func() {
-		if err := tunnelClient.Start(); err != nil {
-			log.Fatalf("Failed to start tunnel client: %v", err)
+		if err := augerClient.Start(); err != nil {
+			log.Fatalf("Failed to start auger client: %v", err)
 		}
 	}()
 	time.Sleep(1 * time.Second)
-	return tunnelClient
+	return augerClient
 }

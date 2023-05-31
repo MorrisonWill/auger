@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/log"
-	"github.com/morrisonwill/tunnel/client"
-	"github.com/morrisonwill/tunnel/server"
+	"github.com/morrisonwill/auger/client"
+	"github.com/morrisonwill/auger/server"
 	"github.com/spf13/cobra"
 )
 
@@ -25,10 +25,10 @@ var (
 const serverPort = 49152
 
 var rootCmd = &cobra.Command{
-	Use:   "tunnel",
-	Short: "Tunnel is an open-source alternative to ngrok",
+	Use:   "auger",
+	Short: "Auger is an open-source alternative to ngrok",
 	Long: `A Fast and Flexible tunneling tool written in Go.
-Complete documentation is available at https://github.com/morrisonwill/tunnel`,
+Complete documentation is available at https://github.com/morrisonwill/auger`,
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = cmd.Help()
 	},
@@ -56,11 +56,11 @@ var serverCmd = &cobra.Command{
 }
 
 func init() {
-	serverCmd.Flags().IntVar(&minPort, "min-port", getEnvAsInt("TUNNEL_MIN_PORT", 0), "Minimum port range")
-	serverCmd.Flags().IntVar(&maxPort, "max-port", getEnvAsInt("TUNNEL_MAX_PORT", 0), "Maximum port range")
-	serverCmd.Flags().StringVar(&commaSeparatedPorts, "ports", getEnvAsString("TUNNEL_PORTS", ""), "Comma-separated ports")
+	serverCmd.Flags().IntVar(&minPort, "min-port", getEnvAsInt("AUGER_MIN_PORT", 0), "Minimum port range")
+	serverCmd.Flags().IntVar(&maxPort, "max-port", getEnvAsInt("AUGER_MAX_PORT", 0), "Maximum port range")
+	serverCmd.Flags().StringVar(&commaSeparatedPorts, "ports", getEnvAsString("AUGER_PORTS", ""), "Comma-separated ports")
 
-	localCmd.Flags().StringVar(&serverAddress, "to", getEnvAsString("TUNNEL_TO", ""), "Address of the server to connect to")
+	localCmd.Flags().StringVar(&serverAddress, "to", getEnvAsString("AUGER_TO", ""), "Address of the server to connect to")
 	err := localCmd.MarkFlagRequired("to")
 	if err != nil {
 		log.Fatalf("Failed to mark --to as required: %v", err)
