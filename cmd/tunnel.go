@@ -101,7 +101,7 @@ func main() {
 	}
 }
 
-// Start the server, which listens on a fixed port for incoming client connections and assigns a random port for each new client.
+// Start the server, which listens on a fixed port for incoming client connections and assigns a random port for each new client
 func runServer(port int) {
 	server, err := server.NewServer(fmt.Sprintf("0.0.0.0:%d", port))
 
