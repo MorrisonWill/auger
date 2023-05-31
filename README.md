@@ -40,9 +40,6 @@ A Docker image for Auger is available on Docker Hub.
     docker run willmorrison/auger:latest
     ```
 
-Remember to replace `8080` with the port number you want to forward.
-
-
 # Installation
 
 To install Auger, you can choose one of the following methods:
