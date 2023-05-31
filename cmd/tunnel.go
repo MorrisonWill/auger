@@ -72,7 +72,7 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 }
 
-// Get environment variable as string. If not found, return default value.
+// Get environment variable as string. If not found, return default value
 func getEnvAsString(name string, defaultValue string) string {
 	value, exists := os.LookupEnv(name)
 	if !exists {
