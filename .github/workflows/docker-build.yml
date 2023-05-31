@@ -22,4 +22,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}/tunnel:latest
+          tags: ghcr.io/morrisonwill/tunnel:latest
