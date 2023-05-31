@@ -120,7 +120,6 @@ func runServer(port int) {
 		server.SetPorts(ports)
 	}
 
-	// Start the server
 	server.Start()
 }
 
