@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 
 	"math/rand"
@@ -147,8 +148,9 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	for {
 		endUserConn, err := endUserListener.Accept()
 		if err != nil {
-			if err.Error() == "use of closed network connection" {
-				log.Infof("End user connection closed")
+
+			if errors.Is(err, net.ErrClosed) {
+				log.Infof("End user connection closed: %v\n", endUserConn.RemoteAddr())
 				break
 			}
 			log.Errorf("Failed to accept end user connection: %v\n", err)

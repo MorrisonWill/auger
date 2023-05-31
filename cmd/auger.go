@@ -61,10 +61,6 @@ func init() {
 	serverCmd.Flags().StringVar(&commaSeparatedPorts, "ports", getEnvAsString("AUGER_PORTS", ""), "Comma-separated ports")
 
 	localCmd.Flags().StringVar(&serverAddress, "to", getEnvAsString("AUGER_TO", ""), "Address of the server to connect to")
-	err := localCmd.MarkFlagRequired("to")
-	if err != nil {
-		log.Fatalf("Failed to mark --to as required: %v", err)
-	}
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
@@ -127,6 +123,10 @@ func runServer(port int) {
 
 // Start the client, which listens on a local port and proxies data through a remote server.
 func runClient(serverAddress string, localPort int) {
+	if serverAddress == "" {
+		serverAddress = "tnl.pub"
+	}
+
 	client := client.NewClient(fmt.Sprintf("%s:%d", serverAddress, serverPort), fmt.Sprintf("localhost:%d", localPort))
 
 	err := client.Connect()
