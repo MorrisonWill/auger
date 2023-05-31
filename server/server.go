@@ -13,7 +13,7 @@ import (
 
 	"github.com/hashicorp/yamux"
 
-	"github.com/morrisonwill/tunnel/proxy"
+	"github.com/morrisonwill/auger/proxy"
 )
 
 type Server struct {
