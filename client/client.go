@@ -43,7 +43,7 @@ func (c *Client) Connect() error {
 
 	// Get end user port from the server
 	// TODO switch to byte[] and binary.Uint16
-	// TODO you should consider doing this over the yamux session.
+	// TODO consider doing this over the yamux session.
 	reader := bufio.NewReader(conn)
 	line, _, err := reader.ReadLine()
 	if err != nil {
