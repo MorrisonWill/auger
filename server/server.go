@@ -129,20 +129,21 @@ func (s *Server) handleClient(clientConn net.Conn) {
 	}
 
 	// check if client is still alive
-	go func() {
-		for {
-			_, err := session.Ping()
-			if err != nil {
-				endUserListener.Close()
-				session.Close()
-				s.ports.Lock()
-				s.ports.list = append(s.ports.list, endUserPort)
-				s.ports.Unlock()
-				return
-			}
-			time.Sleep(time.Second * 30)
-		}
-	}()
+	// TODO: figure out why ping sometimes doesn't work
+	// go func() {
+	// 	for {
+	// 		_, err := session.Ping()
+	// 		if err != nil {
+	// 			endUserListener.Close()
+	// 			session.Close()
+	// 			s.ports.Lock()
+	// 			s.ports.list = append(s.ports.list, endUserPort)
+	// 			s.ports.Unlock()
+	// 			return
+	// 		}
+	// 		time.Sleep(time.Second * 30)
+	// 	}
+	// }()
 
 	for {
 		endUserConn, err := endUserListener.Accept()
