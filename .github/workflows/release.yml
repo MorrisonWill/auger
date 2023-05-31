@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Build
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -o tunnel_mac cmd/tunnel.go
+          GOOS=linux GOARCH=amd64 go build -o tunnel_linux cmd/tunnel.go
+          GOOS=windows GOARCH=amd64 go build -o tunnel_windows.exe cmd/tunnel.go
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./tunnel_mac
+          asset_name: tunnel_mac
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./tunnel_linux
+          asset_name: tunnel_linux
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./tunnel_windows.exe
+          asset_name: tunnel_windows.exe
+          asset_content_type: application/octet-stream

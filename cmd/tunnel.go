@@ -14,6 +14,8 @@ import (
 
 // TODO: make control port variable
 
+// TODO: docker container not working because of ports
+
 var (
 	serverAddress       string
 	minPort, maxPort    int
