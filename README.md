@@ -24,6 +24,25 @@ While there is a public instance hosted at `tnl.pub` for general use, you are al
 auger client 8080 --to tnl.pub
 ```
 
+# Docker Image
+
+A Docker image for Auger is available on Docker Hub. 
+
+1. Pull the Docker image:
+
+    ```bash
+    docker pull willmorrison/auger:latest
+    ```
+
+2. Run Auger using Docker:
+
+    ```bash
+    docker run willmorrison/auger:latest
+    ```
+
+Remember to replace `8080` with the port number you want to forward.
+
+
 # Installation
 
 To install Auger, you can choose one of the following methods:
