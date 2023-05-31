@@ -4,7 +4,7 @@
 
 <!-- Add Video Examples Here -->
 
-Welcome to Auger, a powerful tool that lets you forward TCP traffic from localhost to a server. Whether you're developing a web app, testing an API, or showing your mom your newest project, Auger offers a simple way to get your work done. With a command-line interface for easy operation and the ability to self-host, Auger helps modern developers.
+Welcome to Auger, a powerful tool that lets you forward TCP traffic from localhost to a server. Whether you're developing a web app, testing an API, or showing your mom your newest project, Auger offers a simple way to get your work done.
 
 ## About
 
