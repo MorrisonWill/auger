@@ -34,7 +34,7 @@ func NewServer(address string) (*Server, error) {
 		return nil, fmt.Errorf("failed to listen: %w", err)
 	}
 
-	// TODO consider moving all this to start or vica versa
+	// TODO consider moving things here or in Start
 	return &Server{
 		listener: listener,
 		rand:     rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -127,44 +127,38 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		return
 	}
 
-	// TODO: ping not working over network
 	// check if client is still alive
 	go func() {
 		for {
-			test, err := session.Ping()
-			fmt.Println(test, err)
+			_, err := session.Ping()
 			if err != nil {
-				log.Printf("Client disconnected", err)
 				endUserListener.Close()
+				session.Close()
+				log.Infof("Client disconnected. Freeing port %d", endUserPort)
 				s.ports.Lock()
 				s.ports.list = append(s.ports.list, endUserPort)
 				s.ports.Unlock()
 				return
 			}
-			time.Sleep(time.Second * 10)
+			time.Sleep(time.Second * 30)
 		}
 	}()
 
-	// TODO: find out why deploying on tnl.pub fails
-
-	// TODO: accept end user first, then if can't open a session close endusersession
-	// TODO: also need ping to cleanup ports, could run every minute
-	// TODO: in big loop, endUserListener can be closed from ping goroutine and then .Accept will error
-
-	// TODO: still getting deadline reached
 	for {
 		endUserConn, err := endUserListener.Accept()
 		if err != nil {
-			// TODO: check what error type is and if it's closed then break, otherwise continue
+			if err.Error() == "use of closed network connection" {
+				log.Infof("End user connection closed")
+				break
+			}
 			log.Errorf("Failed to accept end user connection: %v\n", err)
-			// TODO: continue or break? What can cause this to error?
-			break
+			continue
 		}
 
-		// Open stream for to check if CLI is still alive
 		stream, err := session.Open()
 		if err != nil {
 			log.Info("Client (CLI) has died")
+			endUserConn.Close()
 
 			// add port back to list
 			s.ports.Lock()
@@ -174,7 +168,6 @@ func (s *Server) handleClient(clientConn net.Conn) {
 		}
 
 		// Accept an end user connection
-
 		go func() {
 			log.Infof("Accepted end user: %s", endUserConn.RemoteAddr())
 

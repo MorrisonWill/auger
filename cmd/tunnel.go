@@ -12,12 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO: not working with tnl.pub, i/o deadline (investigate Ping)
-// TODO: add graceful shutdown on both sides
-// TODO: add good error handling on both sides
-// TODO: there's a period between CLI disconnecting and server stopping where Failed to accept end user connection
-// TODO: use https://github.com/charmbracelet/log
-// maybe https://github.com/charmbracelet/lipgloss
+// TODO: make control port variable
 
 var (
 	serverAddress       string
@@ -63,10 +58,10 @@ func init() {
 	serverCmd.Flags().IntVar(&maxPort, "max-port", getEnvAsInt("TUNNEL_MAX_PORT", 0), "Maximum port range")
 	serverCmd.Flags().StringVar(&commaSeparatedPorts, "ports", getEnvAsString("TUNNEL_PORTS", ""), "Comma-separated ports")
 
-	localCmd.Flags().StringVarP(&serverAddress, "remote-address", "r", getEnvAsString("TUNNEL_REMOTE_ADDRESS", ""), "address of the server to connect to")
-	err := localCmd.MarkFlagRequired("remote-address")
+	localCmd.Flags().StringVar(&serverAddress, "to", getEnvAsString("TUNNEL_TO", ""), "Address of the server to connect to")
+	err := localCmd.MarkFlagRequired("to")
 	if err != nil {
-		log.Fatalf("Failed to mark remote-address as required: %v", err)
+		log.Fatalf("Failed to mark --to as required: %v", err)
 	}
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
@@ -75,6 +70,7 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 }
 
+// Get environment variable as string. If not found, return default value.
 func getEnvAsString(name string, defaultValue string) string {
 	value, exists := os.LookupEnv(name)
 	if !exists {
@@ -83,6 +79,7 @@ func getEnvAsString(name string, defaultValue string) string {
 	return value
 }
 
+// Get environment variable as int. If not found or invalid, return default value.
 func getEnvAsInt(name string, defaultValue int) int {
 	valueStr, exists := os.LookupEnv(name)
 	if !exists {
@@ -104,7 +101,7 @@ func main() {
 	}
 }
 
-// runServer runs the server mode.
+// Start the server, which listens on a fixed port for incoming client connections and assigns a random port for each new client.
 func runServer(port int) {
 	server, err := server.NewServer(fmt.Sprintf("0.0.0.0:%d", port))
 
@@ -127,7 +124,7 @@ func runServer(port int) {
 	server.Start()
 }
 
-// runClient runs the client mode.
+// Start the client, which listens on a local port and proxies data through a remote server.
 func runClient(serverAddress string, localPort int) {
 	client := client.NewClient(fmt.Sprintf("%s:%d", serverAddress, serverPort), fmt.Sprintf("localhost:%d", localPort))
 
